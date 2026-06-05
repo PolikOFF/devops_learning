@@ -1,0 +1,130 @@
+[
+  {
+    "timestamp": "2026-06-05 22:10:32",
+    "site": "Google",
+    "url": "https://www.google.com",
+    "status": "UP",
+    "response_time": 0.22,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:10:32",
+    "site": "GitHub",
+    "url": "https://github.com",
+    "status": "UP",
+    "response_time": 0.29,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:10:32",
+    "site": "Yandex",
+    "url": "https://yandex.ru",
+    "status": "UP",
+    "response_time": 0.53,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:25",
+    "site": "Google",
+    "url": "https://www.google.com",
+    "status": "UP",
+    "response_time": 0.15,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:25",
+    "site": "GitHub",
+    "url": "https://github.com",
+    "status": "UP",
+    "response_time": 0.28,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:25",
+    "site": "Yandex",
+    "url": "https://yandex.ru",
+    "status": "UP",
+    "response_time": 0.36,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:27",
+    "site": "Google",
+    "url": "https://www.google.com",
+    "status": "UP",
+    "response_time": 0.15,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:27",
+    "site": "GitHub",
+    "url": "https://github.com",
+    "status": "UP",
+    "response_time": 0.23,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:27",
+    "site": "Yandex",
+    "url": "https://yandex.ru",
+    "status": "UP",
+    "response_time": 0.34,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:30",
+    "site": "Google",
+    "url": "https://www.google.com",
+    "status": "UP",
+    "response_time": 0.16,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:30",
+    "site": "GitHub",
+    "url": "https://github.com",
+    "status": "UP",
+    "response_time": 0.26,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:11:30",
+    "site": "Yandex",
+    "url": "https://yandex.ru",
+    "status": "UP",
+    "response_time": 0.36,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:24:11",
+    "site": "Google",
+    "url": "https://www.google.com",
+    "status": "UP",
+    "response_time": 0.22,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:24:11",
+    "site": "GitHub",
+    "url": "https://github.com",
+    "status": "UP",
+    "response_time": 0.28,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:24:11",
+    "site": "Yandex",
+    "url": "https://yandex.ru",
+    "status": "UP",
+    "response_time": 0.49,
+    "status_code": 200
+  },
+  {
+    "timestamp": "2026-06-05 22:24:11",
+    "site": "HH",
+    "url": "https://hh.ru",
+    "status": "UP",
+    "response_time": 0.43,
+    "status_code": 200
+  }
+]
