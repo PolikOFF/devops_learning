@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-Мониторинг доступности сайтов для DevOps
-Проверяет сайты и отправляет уведомления при проблемах
+Мониторинг доступности сайтов для DevOps (постоянно + пишет в базу данных)
 """
 
 import urllib.request
 import urllib.error
-import json
 import time
 import datetime
 import os
+import psycopg2
 
-# Конфигурация
 SITES = [
     {"name": "Google", "url": "https://www.google.com"},
     {"name": "GitHub", "url": "https://github.com"},
@@ -19,152 +17,100 @@ SITES = [
     {"name": "HH", "url": "https://hh.ru"},
 ]
 
-# Telegram настройки (заполните позже)
-TELEGRAM_BOT_TOKEN = ""  # Токен бота от @BotFather
-TELEGRAM_CHAT_ID = ""     # Ваш chat_id
+CHECK_INTERVAL = 30
 
-# Файл для истории проверок
-HISTORY_FILE = "site_history.json"
+DB_HOST = os.getenv('DB_HOST', 'db')
+DB_NAME = os.getenv('POSTGRES_DB', 'monitoring')
+DB_USER = os.getenv('POSTGRES_USER', 'monitor')
+DB_PASS = os.getenv('POSTGRES_PASSWORD', 'secret123')
 
-def send_telegram(message):
-    """Отправляет сообщение в Telegram"""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return  # Telegram не настроен
-    
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    data = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
-        "parse_mode": "HTML"
-    }
-    
-    try:
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(data).encode('utf-8'),
-            headers={'Content-Type': 'application/json'}
+def get_db_connection():
+    return psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS
+    )
+
+def create_database():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS site_checks (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP NOT NULL,
+            site_name VARCHAR(100) NOT NULL,
+            site_url VARCHAR(500) NOT NULL,
+            status VARCHAR(10) NOT NULL,
+            response_time FLOAT,
+            status_code INT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        urllib.request.urlopen(req, timeout=10)
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("✅ База данных инициализирована")
+
+def save_to_db(timestamp, site_name, site_url, status, response_time, status_code):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO site_checks (timestamp, site_name, site_url, status, response_time, status_code)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (timestamp, site_name, site_url, status, response_time, status_code))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
     except Exception as e:
-        print(f"❌ Ошибка отправки в Telegram: {e}")
+        print(f"Error saving data to DB: {e}")
+        return False
 
 def check_site(name, url):
-    """
-    Проверяет доступность сайта
-    Возвращает: (status, response_time, status_code)
-    """
     try:
         start_time = time.time()
-        req = urllib.request.Request(
-            url,
-            headers={'User-Agent': 'DevOps-Monitor/1.0'}
-        )
-        
+        req = urllib.request.Request(url, headers={'User-Agent': 'DevOps-Monitor/1.0'})
         with urllib.request.urlopen(req, timeout=10) as response:
             response_time = time.time() - start_time
             status_code = response.getcode()
-            
-            if 200 <= status_code < 400:
-                status = "UP"
-            else:
-                status = "DOWN"
-                
+            status = "UP" if 200 <= status_code < 400 else "DOWN"
             return status, round(response_time, 2), status_code
-            
-    except urllib.error.HTTPError as e:
-        return "DOWN", 0, e.code
-    except urllib.error.URLError as e:
-        return "DOWN", 0, str(e)
     except Exception as e:
-        return "DOWN", 0, str(e)
-
-def save_to_history(data):
-    """Сохраняет результаты проверки в файл"""
-    history = []
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, 'r') as f:
-            history = json.load(f)
-    
-    history.append(data)
-    
-    # Оставляем только последние 100 записей
-    if len(history) > 100:
-        history = history[-100:]
-    
-    with open(HISTORY_FILE, 'w') as f:
-        json.dump(history, f, indent=2)
-
-def get_stats():
-    """Показывает статистику из истории"""
-    if not os.path.exists(HISTORY_FILE):
-        print("📭 Нет истории проверок")
-        return
-    
-    with open(HISTORY_FILE, 'r') as f:
-        history = json.load(f)
-    
-    if not history:
-        return
-    
-    print(f"\n📊 Статистика за последние {len(history)} проверок:")
-    
-    # Статистика по каждому сайту
-    for site_name in [s["name"] for s in SITES]:
-        site_checks = [h for h in history if h["site"] == site_name]
-        if site_checks:
-            up_count = sum(1 for h in site_checks if h["status"] == "UP")
-            up_percent = (up_count / len(site_checks)) * 100
-            avg_time = sum(h["response_time"] for h in site_checks if h["response_time"] > 0) / len(site_checks)
-            print(f"   {site_name}: {up_percent:.1f}% доступен (ср. ответ: {avg_time:.2f}с)")
+        return "DOWN", 0, 0
 
 def main():
-    print("=" * 50)
-    print("🌐 DevOps Site Monitor v1.0")
-    print("=" * 50)
-    
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"\n🕐 Время проверки: {timestamp}")
-    
-    failed_sites = []
-    
+    timestamp = datetime.datetime.now()
+    timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n{'='*50}")
+    print(f"🕐 Проверка: {timestamp_str}")
+    print(f"{'='*50}")
     for site in SITES:
         name = site["name"]
         url = site["url"]
-        
-        print(f"\n🔍 Проверка {name} ({url})...", end=" ", flush=True)
-        
+        print(f"[CHECK] {name}...", end=" ", flush=True)
         status, response_time, status_code = check_site(name, url)
-        
         if status == "UP":
-            print(f"✅ UP ({response_time}с, код {status_code})")
+            print(f"✅ UP ({response_time}с, {status_code})")
         else:
             print(f"❌ DOWN (ошибка: {status_code})")
-            failed_sites.append(f"• {name}: {status_code}")
-        
-        # Сохраняем в историю
-        save_to_history({
-            "timestamp": timestamp,
-            "site": name,
-            "url": url,
-            "status": status,
-            "response_time": response_time,
-            "status_code": status_code if isinstance(status_code, int) else 0
-        })
-    
-    # Отправляем уведомление, если есть проблемы
-    if failed_sites:
-        message = f"⚠️ <b>ALERT: Проблемы с доступностью</b>\n{timestamp}\n\n" + "\n".join(failed_sites)
-        send_telegram(message)
-        print(f"\n📨 Отправлено уведомление о {len(failed_sites)} проблемах")
-    else:
-        print("\n✅ Все сайты доступны!")
-    
-    # Показываем статистику
-    get_stats()
-    
-    print("\n" + "=" * 50)
-    print("💡 Для постоянного мониторинга используйте cron или systemd timer")
-    print("=" * 50)
+        save_to_db(timestamp, name, url, status, response_time, status_code)
 
 if __name__ == "__main__":
-    main()
+    print("🚀 DevOps Site Monitor - non-stop mode")
+    print(f"⏱️  Checking interval: {CHECK_INTERVAL} sec")
+    print(f"DataBase: {DB_HOST}/{DB_NAME}")
+    try:
+        create_database()
+    except Exception as e:
+        print(f"Error connection to DB: {e}")
+        print("Work continues, information will not be saved!")
+    print("For stop use Ctrl+C")
+    try:
+        while True:
+            main()
+            print(f"💤 Sleep at {CHECK_INTERVAL} seconds...")
+            time.sleep(CHECK_INTERVAL)
+    except KeyboardInterrupt:
+        print("\n\n🛑 Monitoring stopped")

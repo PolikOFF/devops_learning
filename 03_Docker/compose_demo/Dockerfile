@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY check_site.py .
 
-RUN pip install --no-cache-dir urllib3
+RUN pip install --no-cache-dir psycopg2-binary
 
 CMD ["python", "check_site.py"]
