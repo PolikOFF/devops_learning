@@ -20,7 +20,7 @@ services:
 
   monitor:
     build:
-      context: /home/polikqwerty/Desktop/DevOps_Learning/03_Docker/compose_demo
+      context: .
       dockerfile: Dockerfile
     container_name: site-monitor
     depends_on:
