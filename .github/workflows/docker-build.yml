@@ -1,0 +1,31 @@
+name: Docker Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: |
+        cd 03_Docker/compose_demo
+        docker build -t site-monitor:test .
+    
+    - name: Verify image was built
+      run: docker images | grep site-monitor
+    
+    - name: Run tests (check sites)
+      run: |
+        cd 03_Docker/compose_demo
+        docker run --rm site-monitor:test python check_site.py
