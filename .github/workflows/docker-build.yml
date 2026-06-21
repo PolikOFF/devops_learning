@@ -28,4 +28,4 @@ jobs:
     - name: Run tests (check sites)
       run: |
         cd 03_Docker/compose_demo
-        docker run --rm site-monitor:test python check_site.py
+        docker run --rm site-monitor:test python check_site_ci.py
