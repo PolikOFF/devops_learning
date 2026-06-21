@@ -1,4 +1,4 @@
-name: Docker Build & Test
+name: Docker Build & Test & Push
 
 on:
   push:
@@ -21,9 +21,6 @@ jobs:
       run: |
         cd 03_Docker/compose_demo
         docker build -t site-monitor:test .
-    
-    - name: Verify image was built
-      run: docker images | grep site-monitor
     
     - name: Run tests (check sites)
       run: |
