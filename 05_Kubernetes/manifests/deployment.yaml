@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: site-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: site-monitor
+  template:
+    metadata:
+      labels:
+        app: site-monitor
+    spec:
+      containers:
+      - name: site-monitor
+        image: polikoff/site-monitor:latest
+        env:
+        - name: TZ
+          value: Europe/Moscow
+        envFrom:
+        - configMapRef:
+            name: db-config

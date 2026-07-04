@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+data:
+  DB_HOST: 10.100.192.35
+  POSTGRES_DB: monitoring
+  POSTGRES_USER: monitor
+  POSTGRES_PASSWORD: secret123

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+          # Эти переменные передаются напрямую
+          - name: POSTGRES_USER
+            value: "monitor"
+          - name: POSTGRES_DB
+            value: "monitoring"
+        envFrom:
+          # А пароль мы берем из ConfigMap
+          - configMapRef:
+              name: db-config
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
