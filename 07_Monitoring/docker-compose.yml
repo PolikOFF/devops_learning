@@ -4,15 +4,18 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: monitor-db
-    environment:
-      POSTGRES_USER: monitor
-      POSTGRES_PASSWORD: secret123
-      POSTGRES_DB: monitoring
+    env_file:
+      - .env.postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monitor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   grafana:
     image: grafana/grafana:latest
@@ -23,7 +26,24 @@ services:
       - grafana_data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+
+  monitor:
+    build: .
+    container_name: site-monitor
+    env_file:
+      - .env.monitor
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
 volumes:
   postgres_data:
